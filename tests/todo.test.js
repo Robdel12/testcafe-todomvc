@@ -1,46 +1,5 @@
-import { Selector, ClientFunction } from "testcafe";
-import fs from "fs";
-import { agentJsFilename } from "@percy/agent";
-
-class Helper {
-  async snapshot(snapshotName, snapshotOptions) {
-    let agentFileContents = fs.readFileSync(agentJsFilename()).toString();
-    let loadScriptFile = ClientFunction(
-      () => {
-        var script = document.createElement("script");
-        script.text = agentFileContents;
-        console.log("script.text = ", script.text);
-
-        document.body.append(script);
-
-        return true;
-      },
-      { dependencies: { agentFileContents: agentFileContents } }
-    );
-
-    await loadScriptFile();
-
-    let setupPercyAndSnapshot = ClientFunction(
-      () => {
-        let percyAgentClient = new window.PercyAgent({
-          clientInfo: "self-built-test-cafe",
-          environmentInfo:
-            "some helpful os or browser information for debugging"
-        });
-
-        percyAgentClient.snapshot(snapshotName, snapshotOptions);
-      },
-      {
-        dependencies: {
-          snapshotName: snapshotName,
-          snapshotOptions: snapshotOptions
-        }
-      }
-    );
-
-    await setupPercyAndSnapshot();
-  }
-}
+import { Selector } from "testcafe";
+import { Percy } from "./utils";
 
 class TodoPage {
   constructor() {
@@ -57,7 +16,7 @@ class TodoPage {
 }
 
 const todoPage = new TodoPage();
-const helper = new Helper();
+const helper = new Percy();
 
 fixture("Test TodoMVC App").page("http://todomvc.com/examples/vanillajs/");
 
@@ -66,8 +25,7 @@ test("Create todo", async t => {
     .typeText(todoPage.input, "write blog post about JS")
     .pressKey("enter");
 
-  await helper.snapshot("the snapshot");
-
+  await helper.percySnapshot("the snapshot");
   await t.expect(todoPage.todoItems.count).eql(1);
 
   await t
@@ -75,146 +33,123 @@ test("Create todo", async t => {
     .contains("write blog post about JS");
 });
 
-// test('Edit todo', async t => {
-//   await t
-//     .typeText(todoPage.input, 'write blog post about JS')
-//     .pressKey('enter')
+test("Edit todo", async t => {
+  await t
+    .typeText(todoPage.input, "write blog post about JS")
+    .pressKey("enter");
 
-//   await t
-//     .doubleClick(todoPage.firstTodoItem)
-//     .selectText(todoPage.editInput, 6)
-//     .pressKey('backspace')
-//     .typeText(todoPage.editInput, 'something different')
-//     .pressKey('enter')
+  await t
+    .doubleClick(todoPage.firstTodoItem)
+    .selectText(todoPage.editInput, 6)
+    .pressKey("backspace")
+    .typeText(todoPage.editInput, "something different")
+    .pressKey("enter");
 
-//   await t
-//     .expect(todoPage.firstTodoItem.textContent)
-//     .contains('write something different')
-// })
+  await t
+    .expect(todoPage.firstTodoItem.textContent)
+    .contains("write something different");
+});
 
-// test('Delete todo', async t => {
-//   await t
-//     .typeText(todoPage.input, 'write blog post about JS')
-//     .pressKey('enter')
+test("Delete todo", async t => {
+  await t
+    .typeText(todoPage.input, "write blog post about JS")
+    .pressKey("enter")
 
-//     .typeText(todoPage.input, 'buy some beer')
-//     .pressKey('enter')
+    .typeText(todoPage.input, "buy some beer")
+    .pressKey("enter");
 
-//   await t
-//     .expect(todoPage.todoItems.count)
-//     .eql(2)
+  await t.expect(todoPage.todoItems.count).eql(2);
 
-//   await t
-//     .hover(todoPage.firstTodoItem)
-//     .click(todoPage.todoItems.nth(0).find('.destroy'))
+  await t
+    .hover(todoPage.firstTodoItem)
+    .click(todoPage.todoItems.nth(0).find(".destroy"));
 
-//   await t
-//     .expect(todoPage.todoItems.count)
-//     .eql(1)
+  await t.expect(todoPage.todoItems.count).eql(1);
 
-//   await t
-//     .expect(todoPage.firstTodoItem.textContent)
-//     .contains('buy some beer')
-// })
+  await t.expect(todoPage.firstTodoItem.textContent).contains("buy some beer");
+});
 
-// test('Complete one todo', async t => {
-//   await t
-//     .typeText(todoPage.input, 'write blog post about JS')
-//     .pressKey('enter')
+test("Complete one todo", async t => {
+  await t
+    .typeText(todoPage.input, "write blog post about JS")
+    .pressKey("enter")
 
-//     .typeText(todoPage.input, 'buy some beer')
-//     .pressKey('enter')
+    .typeText(todoPage.input, "buy some beer")
+    .pressKey("enter");
 
-//   await t
-//     .click(todoPage.todoItems.nth(0).find('.toggle'))
+  await t.click(todoPage.todoItems.nth(0).find(".toggle"));
 
-//   await t
-//     .expect(todoPage.todoItems.nth(0).hasClass('completed'))
-//     .ok()
+  await t.expect(todoPage.todoItems.nth(0).hasClass("completed")).ok();
 
-//   await t
-//     .expect(todoPage.todoItems.count)
-//     .eql(2)
-// })
+  await t.expect(todoPage.todoItems.count).eql(2);
+});
 
-// test('Show active/completed todos', async t => {
-//   await t
-//     .typeText(todoPage.input, 'write blog post about JS')
-//     .pressKey('enter')
+test("Show active/completed todos", async t => {
+  await t
+    .typeText(todoPage.input, "write blog post about JS")
+    .pressKey("enter")
 
-//     .typeText(todoPage.input, 'buy some beer')
-//     .pressKey('enter')
+    .typeText(todoPage.input, "buy some beer")
+    .pressKey("enter");
 
-//   await t
-//     .click(todoPage.todoItems.nth(0).find('.toggle'))
+  await t.click(todoPage.todoItems.nth(0).find(".toggle"));
 
-//   await t
-//     .expect(todoPage.todoItems.count)
-//     .eql(2)
+  await t.expect(todoPage.todoItems.count).eql(2);
 
-//   // when click on show active
-//   await t
-//     .click(todoPage.showActiveLink)
+  // when click on show active
+  await t.click(todoPage.showActiveLink);
 
-//   await t
-//     .expect(todoPage.todoItems.nth(0).textContent)
-//     .contains('buy some beer')
+  await t
+    .expect(todoPage.todoItems.nth(0).textContent)
+    .contains("buy some beer");
 
-//   // when click on show completed
-//   await t
-//     .click(Selector(todoPage.showCompletedLink))
+  // when click on show completed
+  await t.click(Selector(todoPage.showCompletedLink));
 
-//   await t
-//     .expect(todoPage.firstTodoItem.textContent)
-//     .contains('write blog post about JS')
-// })
+  await t
+    .expect(todoPage.firstTodoItem.textContent)
+    .contains("write blog post about JS");
+});
 
-// test('Complete all todos', async t => {
-//   await t
-//     .typeText(todoPage.input, 'write blog post about JS')
-//     .pressKey('enter')
+test("Complete all todos", async t => {
+  await t
+    .typeText(todoPage.input, "write blog post about JS")
+    .pressKey("enter")
 
-//     .typeText(todoPage.input, 'buy some beer')
-//     .pressKey('enter')
+    .typeText(todoPage.input, "buy some beer")
+    .pressKey("enter")
 
-//     .typeText(todoPage.input, 'watch a movie')
-//     .pressKey('enter')
+    .typeText(todoPage.input, "watch a movie")
+    .pressKey("enter")
 
-//     .typeText(todoPage.input, 'go to a meeting')
-//     .pressKey('enter')
+    .typeText(todoPage.input, "go to a meeting")
+    .pressKey("enter");
 
-//   await t
-//     .expect(todoPage.todoItems.count)
-//     .eql(4)
-//     .expect(todoPage.completedTodos.count)
-//     .eql(0)
+  await t
+    .expect(todoPage.todoItems.count)
+    .eql(4)
+    .expect(todoPage.completedTodos.count)
+    .eql(0);
 
-//   await t
-//     .click(todoPage.completeAll)
+  await t.click(todoPage.completeAll);
 
-//   await t
-//     .expect(todoPage.completedTodos.count)
-//     .eql(4)
-// })
+  await t.expect(todoPage.completedTodos.count).eql(4);
+});
 
-// test('Delete all completed todos', async t => {
+test("Delete all completed todos", async t => {
+  let todos = [
+    "write blog post about JS",
+    "buy some beer",
+    "watch a movie",
+    "go to a meeting"
+  ];
 
-//   let todos = ['write blog post about JS', 'buy some beer', 'watch a movie', 'go to a meeting']
+  for (let todo of todos)
+    await t.typeText(todoPage.input, todo).pressKey("enter");
 
-//   for (let todo of todos)
-//     await t
-//     .typeText(todoPage.input, todo)
-//     .pressKey('enter')
+  await t.expect(todoPage.todoItems.count).eql(todos.length);
 
-//   await t
-//     .expect(todoPage.todoItems.count)
-//     .eql(todos.length)
+  await t.click(todoPage.completeAll).click(todoPage.deleteCompleted);
 
-//   await t
-//     .click(todoPage.completeAll)
-//     .click(todoPage.deleteCompleted)
-
-//   await t
-//     .expect(todoPage.todoItems.count)
-//     .eql(0)
-// })
+  await t.expect(todoPage.todoItems.count).eql(0);
+});
