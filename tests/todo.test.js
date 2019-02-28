@@ -20,11 +20,10 @@ class Helper {
 
     await loadScriptFile();
 
-    let setupPercy = ClientFunction(
+    let setupPercyAndSnapshot = ClientFunction(
       () => {
-        console.log(window);
         let percyAgentClient = new window.PercyAgent({
-          clientInfo: "awesome-percy-sdk@0.0.1",
+          clientInfo: "self-built-test-cafe",
           environmentInfo:
             "some helpful os or browser information for debugging"
         });
@@ -39,7 +38,7 @@ class Helper {
       }
     );
 
-    await setupPercy();
+    await setupPercyAndSnapshot();
   }
 }
 
