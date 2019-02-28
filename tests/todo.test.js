@@ -1,60 +1,80 @@
-import { Selector, ClientFunction } from 'testcafe'
-import fs from 'fs';
-
-import { agentJsFilename } from '@percy/agent';
+import { Selector, ClientFunction } from "testcafe";
+import fs from "fs";
+import { agentJsFilename } from "@percy/agent";
 
 class Helper {
-  snapshot(snapshotName, snapshotOptions) {
-    const percyAgentClient = new PercyAgent({
-      clientInfo: 'awesome-percy-sdk@0.0.1',
-      environmentInfo: 'some helpful os or browser information for debugging',
-    });
+  async snapshot(snapshotName, snapshotOptions) {
+    let agentFileContents = fs.readFileSync(agentJsFilename()).toString();
+    let loadScriptFile = ClientFunction(
+      () => {
+        var script = document.createElement("script");
+        script.text = agentFileContents;
+        console.log("script.text = ", script.text);
 
-    percyAgentClient.snapshot(snapshotName, snapshotOptions);
+        document.body.append(script);
+
+        return true;
+      },
+      { dependencies: { agentFileContents: agentFileContents } }
+    );
+
+    await loadScriptFile();
+
+    let setupPercy = ClientFunction(
+      () => {
+        console.log(window);
+        let percyAgentClient = new window.PercyAgent({
+          clientInfo: "awesome-percy-sdk@0.0.1",
+          environmentInfo:
+            "some helpful os or browser information for debugging"
+        });
+
+        percyAgentClient.snapshot(snapshotName, snapshotOptions);
+      },
+      {
+        dependencies: {
+          snapshotName: snapshotName,
+          snapshotOptions: snapshotOptions
+        }
+      }
+    );
+
+    await setupPercy();
   }
 }
 
 class TodoPage {
   constructor() {
-    this.input = Selector('.new-todo')
-    this.editInput = Selector('.edit')
-    this.todoItems = Selector('.todo-list li')
-    this.firstTodoItem = Selector('.todo-list li:nth-child(1)')
-    this.completedTodos = Selector('.completed')
-    this.completeAll = Selector('.toggle-all')
-    this.deleteCompleted = Selector('.clear-completed')
-    this.showActiveLink = Selector('[href="#/active"]')
-    this.showCompletedLink = Selector('[href="#/completed"]')
+    this.input = Selector(".new-todo");
+    this.editInput = Selector(".edit");
+    this.todoItems = Selector(".todo-list li");
+    this.firstTodoItem = Selector(".todo-list li:nth-child(1)");
+    this.completedTodos = Selector(".completed");
+    this.completeAll = Selector(".toggle-all");
+    this.deleteCompleted = Selector(".clear-completed");
+    this.showActiveLink = Selector('[href="#/active"]');
+    this.showCompletedLink = Selector('[href="#/completed"]');
   }
 }
 
-const todoPage = new TodoPage()
-const helper = new Helper()
+const todoPage = new TodoPage();
+const helper = new Helper();
 
-fixture('Test TodoMVC App')
-  .page('http://todomvc.com/examples/vanillajs/')
+fixture("Test TodoMVC App").page("http://todomvc.com/examples/vanillajs/");
 
-
-test('Create todo', async t => {
-  // this hangs the browser for some reason?
-  await t.eval(new Funcation(fs.readFileSync(agentJsFilename()).toString()));
-
+test("Create todo", async t => {
   await t
-    .typeText(todoPage.input, 'write blog post about JS')
-    .pressKey('enter')
+    .typeText(todoPage.input, "write blog post about JS")
+    .pressKey("enter");
 
+  await helper.snapshot("the snapshot");
 
-  await helper.snapshot('the snapshot');
-
-  await t
-    .expect(todoPage.todoItems.count)
-    .eql(1)
+  await t.expect(todoPage.todoItems.count).eql(1);
 
   await t
     .expect(todoPage.firstTodoItem.textContent)
-    .contains('write blog post about JS')
-})
-
+    .contains("write blog post about JS");
+});
 
 // test('Edit todo', async t => {
 //   await t
@@ -72,7 +92,6 @@ test('Create todo', async t => {
 //     .expect(todoPage.firstTodoItem.textContent)
 //     .contains('write something different')
 // })
-
 
 // test('Delete todo', async t => {
 //   await t
@@ -99,7 +118,6 @@ test('Create todo', async t => {
 //     .contains('buy some beer')
 // })
 
-
 // test('Complete one todo', async t => {
 //   await t
 //     .typeText(todoPage.input, 'write blog post about JS')
@@ -119,7 +137,6 @@ test('Create todo', async t => {
 //     .expect(todoPage.todoItems.count)
 //     .eql(2)
 // })
-
 
 // test('Show active/completed todos', async t => {
 //   await t
@@ -153,7 +170,6 @@ test('Create todo', async t => {
 //     .contains('write blog post about JS')
 // })
 
-
 // test('Complete all todos', async t => {
 //   await t
 //     .typeText(todoPage.input, 'write blog post about JS')
@@ -181,7 +197,6 @@ test('Create todo', async t => {
 //     .expect(todoPage.completedTodos.count)
 //     .eql(4)
 // })
-
 
 // test('Delete all completed todos', async t => {
 
