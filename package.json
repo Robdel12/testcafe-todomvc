@@ -10,7 +10,8 @@
     "test:headless": "./node_modules/.bin/testcafe chrome:headless tests/",
     "test:debug": "./node_modules/.bin/testcafe chrome tests/ --debug-on-fail",
     "test:screenshots": "./node_modules/.bin/testcafe chrome tests/ --screenshots-on-fails -s screenshots",
-    "test": "./node_modules/.bin/testcafe chrome tests/"
+    "test": "./node_modules/.bin/testcafe chrome tests/",
+    "percy": "percy exec -- testcafe chrome tests/"
   },
   "repository": {
     "type": "git",
@@ -30,5 +31,8 @@
   "homepage": "https://github.com/fvitas/testcafe-todomvc#readme",
   "dependencies": {
     "testcafe": "^0.20.3"
+  },
+  "devDependencies": {
+    "@percy/agent": "^0.1.16"
   }
 }
