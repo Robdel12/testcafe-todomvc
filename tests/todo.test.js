@@ -1,5 +1,5 @@
 import { Selector } from "testcafe";
-import { Percy } from "./utils";
+import { percySnapshot } from "./utils";
 
 class TodoPage {
   constructor() {
@@ -16,7 +16,6 @@ class TodoPage {
 }
 
 const todoPage = new TodoPage();
-const helper = new Percy();
 
 fixture("Test TodoMVC App").page("http://todomvc.com/examples/vanillajs/");
 
@@ -25,7 +24,7 @@ test("Create todo", async t => {
     .typeText(todoPage.input, "write blog post about JS")
     .pressKey("enter");
 
-  await helper.percySnapshot("the snapshot");
+  await percySnapshot("the snapshot");
   await t.expect(todoPage.todoItems.count).eql(1);
 
   await t
