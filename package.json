@@ -33,6 +33,6 @@
     "testcafe": "^0.20.3"
   },
   "devDependencies": {
-    "@percy/agent": "^0.1.16"
+    "@percy/agent": "~0"
   }
 }
